@@ -4,3 +4,4 @@ sqlalchemy
 langchain-openai
 langchain-community
 python-dotenv  # If you use environment variables
+pandasai
