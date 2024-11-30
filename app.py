@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+openai_api_key = st.secrets["OPENAI_API_KEY"]
+
+client = OpenAI(api_key=openai_api_key)
 
 unique_specialties = [
     'CPP, GIS, etc.', 'Cash flow management', 'Debt Management', 'LGBTQAI2S+ Households', 
@@ -98,7 +100,7 @@ def main():
         filtered_df = filtered_df[filtered_df['specialties'].apply(filter_specialties, selected_specialties=selected_specialties)]
 
 
-    llm = PandasOpenAI(api_token=os.environ["OPENAI_API_KEY"])
+    llm = PandasOpenAI(api_token=openai_api_key)
     query_engine = SmartDataframe(
         df if select_all_provinces else filtered_df,
         config={
