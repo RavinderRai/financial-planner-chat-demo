@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-openai_api_key = st.secrets["OPENAI_API_KEY"]
+#openai_api_key = st.secrets["OPENAI_API_KEY"]
+openai_api_key = os.environ["OPENAI_API_KEY"]
 
 client = OpenAI(api_key=openai_api_key)
 
@@ -21,18 +22,19 @@ unique_specialties = [
     'small business', 'small clients', 'tax planning', 'tax prep and filing', 'trusts'
 ]
 
+# "Select a province..." is meant to be a default option since selectbox in streamlit doesn't have that feature
 all_regions = [
-    "Alberta", "British Columbia", "Manitoba", "New Brunswick", 
+    "Select a province...", "Alberta", "British Columbia", "Manitoba", "New Brunswick", 
     "Newfoundland", "Northwest Territories", "Nova Scotia", 
     "Nunavut", "Ontario", "Prince Edward Island", "Quebec", 
     "Saskatchewan", "Yukon"
 ]
 
-def filter_provinces(row, selected_regions):
+def filter_provinces(row, selected_region):
     # Split the provinces_served string into a list of provinces
     provinces_list = [province.strip() for province in row.split(',')]
-    # Check if all selected regions are in the list of provinces
-    return all(region in provinces_list for region in selected_regions)
+    # Check if the selected region is in the list of provinces
+    return selected_region in provinces_list
 
 def filter_specialties(row, selected_specialties):
     # If the row is NaN, return False (to filter out this row)
@@ -65,44 +67,33 @@ def main():
     st.title("Financial Planning Assistant:")
     st.subheader("I can refer you to a financial planner. What are you looking for?")
 
-    st.sidebar.title("Select Regions or Specialties")
+    st.sidebar.title("Select Province or Specialties")
     
-    
-    # Checkbox to select/deselect all
-    select_all_provinces = st.sidebar.checkbox("Select/Deselect All Regions", value=False)
-    
-    # If select_all is checked, pre-select all regions
-    if select_all_provinces:
-        selected_regions = st.sidebar.multiselect(
-            "Choose one or more regions:", all_regions, default=all_regions
-        )
-    else:
-        selected_regions = st.sidebar.multiselect(
-            "Choose one or more regions:", all_regions
-        )
+    selected_region = st.sidebar.selectbox(
+        "Choose your province:", all_regions
+    )
     
     selected_specialties = st.sidebar.multiselect(
         "Choose one or more specialties:", 
-        unique_specialties
+        unique_specialties,
+        placeholder="Select your specialties..."
     )
 
     df = pd.read_csv('cleaned_demo_data.csv')
 
-    # Filter DataFrame by provinces served if regions are selected
-    if selected_regions:
-        filtered_df = df[df['provinces_served'].apply(filter_provinces, selected_regions=selected_regions)]
+    if selected_region and selected_region != "Select a province...":
+        filtered_df = df[df['provinces_served'].apply(filter_provinces, selected_region=selected_region)]
     else:
-        st.warning("Please select at least one region to start chatting.")
-        return  # Stop further execution if no province is selected
+        st.warning("Please select your province to start.")
+        st.stop()  # Stop
 
     # Filter DataFrame by specialties if specialties are selected
     if selected_specialties:
         filtered_df = filtered_df[filtered_df['specialties'].apply(filter_specialties, selected_specialties=selected_specialties)]
 
-
     llm = PandasOpenAI(api_token=openai_api_key)
     query_engine = SmartDataframe(
-        df if select_all_provinces else filtered_df,
+        filtered_df,
         config={
             "llm": llm,
         },
