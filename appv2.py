@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#openai_api_key = st.secrets["OPENAI_API_KEY"]
-openai_api_key = os.environ["OPENAI_API_KEY_RAVI"]
+openai_api_key = st.secrets["OPENAI_API_KEY"]
+#openai_api_key = os.environ["OPENAI_API_KEY_RAVI"]
 
 client = OpenAI(api_key=openai_api_key)
 
